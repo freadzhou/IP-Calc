@@ -1,0 +1,2108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP 地址计算器 - 增强版</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-gradient: linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%);
+            --accent-cyan: #00d9ff;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-green: #10b981;
+            --shadow-sm: 0 2px 8px rgba(102, 126, 234, 0.15);
+            --shadow-md: 0 8px 32px rgba(102, 126, 234, 0.2);
+            --shadow-lg: 0 20px 60px rgba(102, 126, 234, 0.3);
+            --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 动态背景粒子 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(0, 217, 255, 0.2) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 头部设计 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px 40px;
+            border-radius: 24px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(102, 126, 234, 0.1) 50%,
+                transparent 70%
+            );
+            animation: headerShine 8s linear infinite;
+        }
+
+        @keyframes headerShine {
+            0% { transform: translateX(-50%) translateY(-50%) rotate(0deg); }
+            100% { transform: translateX(50%) translateY(50%) rotate(360deg); }
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #00d9ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            position: relative;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 15px;
+            position: relative;
+            font-weight: 500;
+        }
+
+        /* 标签页设计 */
+        .tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .tab {
+            padding: 16px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            min-width: 180px;
+            max-width: 280px;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .tab:hover::before {
+            left: 100%;
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            border-color: #667eea;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4),
+                        inset 0 0 20px rgba(102, 126, 234, 0.1);
+            transform: translateY(-4px) scale(1.02);
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab span {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .tab:hover span {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .calculator-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .calculator-section.active {
+            display: block;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 24px;
+        }
+        
+        /* 卡片设计 */
+        .card {
+            background: var(--card-gradient);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #00d9ff, #ec4899);
+            background-size: 300% 100%;
+            animation: gradientShift 5s ease infinite;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+        
+        .card h3 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+            font-size: 20px;
+            font-weight: 700;
+            padding-bottom: 16px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h3::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #00d9ff);
+            transition: width 0.4s ease;
+        }
+
+        .card:hover h3::after {
+            width: 100%;
+        }
+        
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        
+        .form-row label {
+            font-weight: 600;
+            color: #4b5563;
+            min-width: 90px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .form-row span {
+            color: #9ca3af;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .octet-input,
+        .cidr-input {
+            width: 65px;
+            padding: 12px 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.8);
+            color: #1f2937;
+        }
+
+        .octet-input:focus,
+        .cidr-input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15),
+                        0 4px 12px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+            background: white;
+        }
+
+        .octet-input:hover,
+        .cidr-input:hover {
+            border-color: #a5b4fc;
+            background: white;
+        }
+        
+        /* 按钮设计 */
+        button {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        button:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        button:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+        
+        button.clear {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        button.clear:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
+        }
+        
+        button.copy {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        button.copy:hover {
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+        }
+        
+        /* 结果显示区域 */
+        .result-group {
+            margin-top: 18px;
+            padding: 18px;
+            background: linear-gradient(145deg, #f9fafb 0%, #f3f4f6 100%);
+            border-radius: 14px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.05), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .result-group:hover::before {
+            left: 100%;
+        }
+
+        .result-group:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .result-group label {
+            font-weight: 700;
+            color: #6b7280;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        
+        .ip-display {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 16px;
+            color: #1f2937;
+            background: white;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .ip-display:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .hint {
+            color: #9ca3af;
+            font-size: 13px;
+            margin-bottom: 12px;
+            font-style: italic;
+            padding-left: 12px;
+            border-left: 3px solid #667eea;
+        }
+        
+        /* 信息区域 */
+        .info-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            margin-top: 30px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .info-section h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+            font-size: 26px;
+            font-weight: 800;
+        }
+        
+        .info-section h3 {
+            color: #4b5563;
+            margin: 28px 0 14px 0;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-section h3::before {
+            content: '▸';
+            color: #667eea;
+            font-size: 20px;
+        }
+        
+        .info-section p {
+            color: #6b7280;
+            line-height: 1.9;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+        
+        .info-section ul {
+            color: #6b7280;
+            line-height: 1.9;
+            margin-left: 24px;
+            font-size: 15px;
+        }
+
+        .info-section li {
+            margin-bottom: 8px;
+        }
+        
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 40px;
+            padding: 30px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .footer:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* ========== 移动端优化 ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .header {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .card {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+            
+            .card h3 {
+                font-size: 18px;
+            }
+            
+            .form-row {
+                gap: 8px;
+            }
+            
+            .octet-input {
+                width: 52px;
+                padding: 10px 6px;
+                font-size: 14px;
+            }
+            
+            .cidr-input {
+                width: 52px;
+                padding: 10px 6px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 13px;
+                min-width: 70px;
+            }
+
+            .form-row input[type="text"] {
+                width: 100% !important;
+                min-width: 200px;
+                flex: 1;
+            }
+
+            .result-group {
+                padding: 14px;
+            }
+            
+            .ip-display {
+                font-size: 14px;
+                padding: 12px;
+                word-break: break-all;
+            }
+
+            .info-section {
+                padding: 28px 20px;
+            }
+
+            .info-section h2 {
+                font-size: 22px;
+            }
+            
+            .info-section h3 {
+                font-size: 16px;
+            }
+            
+            .info-section p {
+                font-size: 14px;
+            }
+
+            .tabs {
+                gap: 12px;
+            }
+
+            .tab {
+                padding: 14px 24px;
+                font-size: 14px;
+                min-width: 150px;
+            }
+
+            /* 表格滚动提示 */
+            .table-scroll-wrapper {
+                position: relative;
+            }
+            
+            .table-scroll-wrapper::after {
+                content: '👉 左右滑动查看更多';
+                position: absolute;
+                bottom: -24px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 12px;
+                color: #9ca3af;
+                white-space: nowrap;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            
+            .table-scroll-wrapper.has-overflow::after {
+                opacity: 1;
+            }
+
+            /* 表格字体调整 */
+            .result-table th,
+            .result-table td {
+                padding: 10px 12px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 480px) {
+            .octet-input {
+                width: 46px;
+                padding: 8px 4px;
+                font-size: 13px;
+            }
+            
+            .cidr-input {
+                width: 46px;
+                padding: 8px 4px;
+                font-size: 13px;
+            }
+
+            button {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+            
+            .tab {
+                padding: 12px 18px;
+                font-size: 13px;
+            }
+
+            .card h3 {
+                font-size: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+
+        /* 加载动画 */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* 表格样式 - 用于端口查询和 VLSM */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .result-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.8px;
+        }
+
+        .result-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .result-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .tag.tcp { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .tag.udp { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .tag.both { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+
+        /* 表格容器横向滚动支持 */
+        .table-scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 宽表格最小宽度保证 */
+        .result-table.wide {
+            min-width: 700px;
+        }
+
+        .result-table.extra-wide {
+            min-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 IP 地址计算器 - 增强版</h1>
+            <p>✨ 支持 IPv4/IPv6 计算 + 网络工程工具 | 完全离线 - Powered by Fread.Z</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('ipv4')">
+                <span>📡</span> IPv4 计算器
+            </button>
+            <button class="tab" onclick="switchTab('ipv6')">
+                <span>🌌</span> IPv6 计算器
+            </button>
+            <button class="tab" onclick="switchTab('network-tools')">
+                <span>🛠️</span> 网络工具
+            </button>
+        </div>
+        
+        <!-- IPv4 计算器 -->
+        <div id="ipv4-section" class="calculator-section active">
+            <div class="grid">
+                <!-- 网络和 IP 地址计算器 -->
+                <div class="card">
+                    <h3><span>📡</span> 网络和 IP 地址计算器</h3>
+                    <div class="form-row">
+                        <label>IP 地址:</label>
+                        <input type="number" id="ip1" class="octet-input" value="192" min="0" max="255">
+                        <input type="number" id="ip2" class="octet-input" value="168" min="0" max="255">
+                        <input type="number" id="ip3" class="octet-input" value="0" min="0" max="255">
+                        <input type="number" id="ip4" class="octet-input" value="1" min="0" max="255">
+                        <span>/</span>
+                        <input type="number" id="cidr" class="cidr-input" value="24" min="0" max="32">
+                        <button onclick="calculateNetwork()">计算</button>
+                        <button class="clear" onclick="clearNetwork()">清除</button>
+                        <button class="copy" onclick="copyResults()">复制</button>
+                    </div>
+                    <div class="result-group">
+                        <label>📊 可用地址数</label>
+                        <div class="ip-display" id="usableHosts">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🎭 子网掩码</label>
+                        <div class="ip-display" id="subnetMask">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🌐 网络地址</label>
+                        <div class="ip-display" id="networkAddr">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>▶️ 第一个可用</label>
+                        <div class="ip-display" id="firstUsable">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>◀️ 最后一个可用</label>
+                        <div class="ip-display" id="lastUsable">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>📢 广播地址</label>
+                        <div class="ip-display" id="broadcastAddr">-</div>
+                    </div>
+                </div>
+                
+                <!-- 通过掩码位元数计算子网掩码 -->
+                <div class="card">
+                    <h3><span>🔢</span> CIDR → 子网掩码</h3>
+                    <div class="form-row">
+                        <label>掩码位数:</label>
+                        <input type="number" id="cidrMask" class="cidr-input" value="24" min="0" max="32">
+                        <button onclick="calculateCidrMask()">计算</button>
+                        <button class="clear" onclick="clearCidrMask()">清除</button>
+                    </div>
+                    <div class="result-group">
+                        <label>📊 可用地址数量</label>
+                        <div class="ip-display" id="cidrHosts">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🔢 地址总数</label>
+                        <div class="ip-display" id="cidrTotal">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🎭 子网掩码</label>
+                        <div class="ip-display" id="cidrMaskResult">-</div>
+                    </div>
+                </div>
+                
+                <!-- 通过主机数量计算子网掩码 -->
+                <div class="card">
+                    <h3><span>🏠</span> 主机数 → 子网掩码</h3>
+                    <div class="form-row">
+                        <label>需要地址数:</label>
+                        <input type="number" id="hostCount" class="cidr-input" value="5" min="1">
+                        <button onclick="calculateHostMask()">计算</button>
+                        <button class="clear" onclick="clearHostMask()">清除</button>
+                    </div>
+                    <div class="result-group">
+                        <label>📏 掩码位元数</label>
+                        <div class="ip-display" id="hostCidr">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🎭 子网掩码</label>
+                        <div class="ip-display" id="hostMaskResult">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>📊 可用地址数量</label>
+                        <div class="ip-display" id="hostUsable">-</div>
+                    </div>
+                </div>
+                
+                <!-- IP 地址进制转换器 -->
+                <div class="card">
+                    <h3><span>🔄</span> IP 进制转换器</h3>
+                    <div class="form-row">
+                        <label>十进制:</label>
+                        <input type="number" id="dec1" class="octet-input" value="192" min="0" max="255">
+                        <input type="number" id="dec2" class="octet-input" value="168" min="0" max="255">
+                        <input type="number" id="dec3" class="octet-input" value="0" min="0" max="255">
+                        <input type="number" id="dec4" class="octet-input" value="1" min="0" max="255">
+                        <button onclick="convertFromDec()">转换</button>
+                    </div>
+                    <div class="result-group">
+                        <label>⚡ 二进制</label>
+                        <div class="ip-display" id="binaryResult">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🔷 十六进制</label>
+                        <div class="ip-display" id="hexResult">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🔢 十进制整数</label>
+                        <div class="ip-display" id="intResult">-</div>
+                    </div>
+                </div>
+                
+                <!-- 子网掩码换算器 -->
+                <div class="card">
+                    <h3><span>🔧</span> 子网掩码 → CIDR</h3>
+                    <div class="form-row">
+                        <label>十进制掩码:</label>
+                        <input type="number" id="mask1" class="octet-input" value="255" min="0" max="255">
+                        <input type="number" id="mask2" class="octet-input" value="255" min="0" max="255">
+                        <input type="number" id="mask3" class="octet-input" value="255" min="0" max="255">
+                        <input type="number" id="mask4" class="octet-input" value="0" min="0" max="255">
+                        <button onclick="calculateMaskToCidr()">计算</button>
+                    </div>
+                    <div class="result-group">
+                        <label>📏 掩码位元数</label>
+                        <div class="ip-display" id="maskCidrResult">-</div>
+                    </div>
+                </div>
+                
+                <!-- 子网掩码逆算器 -->
+                <div class="card">
+                    <h3><span>🔙</span> 反掩码计算器</h3>
+                    <p class="hint">计算反掩码/通配符掩码（子网掩码按位取反）</p>
+                    <div class="form-row">
+                        <label>子网掩码:</label>
+                        <input type="number" id="invMask1" class="octet-input" value="255" min="0" max="255">
+                        <input type="number" id="invMask2" class="octet-input" value="255" min="0" max="255">
+                        <input type="number" id="invMask3" class="octet-input" value="255" min="0" max="255">
+                        <input type="number" id="invMask4" class="octet-input" value="0" min="0" max="255">
+                        <button onclick="calculateInverseMask()">计算</button>
+                    </div>
+                    <div class="result-group">
+                        <label>🔄 反掩码</label>
+                        <div class="ip-display">
+                            <span id="invResult1">0</span>.<span id="invResult2">0</span>.<span id="invResult3">0</span>.<span id="invResult4">255</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- IPv6 计算器 -->
+        <div id="ipv6-section" class="calculator-section">
+            <div class="grid">
+                <!-- IPv6 地址转数字 -->
+                <div class="card">
+                    <h3><span>🔢</span> IPv6 地址 → 数字</h3>
+                    <div class="form-row">
+                        <label>IPv6 地址:</label>
+                        <input type="text" id="ipv6ToNum" class="cidr-input" style="width: 320px; flex: 1;" value="2001:4860:4860:0000:0000:0000:0000:8888">
+                        <button onclick="ipv6ToNumber()">转数字</button>
+                    </div>
+                    <div class="result-group">
+                        <label>🔢 IPv6 数字</label>
+                        <div class="ip-display" id="ipv6NumberResult">-</div>
+                    </div>
+                </div>
+                
+                <!-- IPv6 数字转地址 -->
+                <div class="card">
+                    <h3><span>🌐</span> IPv6 数字 → 地址</h3>
+                    <div class="form-row">
+                        <label>IPv6 数字:</label>
+                        <input type="text" id="numToIpv6" class="cidr-input" style="width: 320px; flex: 1;" value="42541956123769884636017138956568135816">
+                        <button onclick="numberToIpv6()">转 IPv6</button>
+                    </div>
+                    <div class="result-group">
+                        <label>🌐 IPv6 地址</label>
+                        <div class="ip-display" id="ipv6AddrResult">-</div>
+                    </div>
+                </div>
+                
+                <!-- IPv6 压缩 -->
+                <div class="card">
+                    <h3><span>🗜️</span> IPv6 压缩</h3>
+                    <div class="form-row">
+                        <label>扩展地址:</label>
+                        <input type="text" id="ipv6Expand" class="cidr-input" style="width: 320px; flex: 1;" value="2001:4860:4860:0000:0000:0000:0000:8888">
+                        <button onclick="compressIpv6()">压缩</button>
+                    </div>
+                    <div class="result-group">
+                        <label>🗜️ 压缩地址</label>
+                        <div class="ip-display" id="ipv6CompressResult">-</div>
+                    </div>
+                </div>
+                
+                <!-- IPv6 扩展 -->
+                <div class="card">
+                    <h3><span>📏</span> IPv6 扩展</h3>
+                    <div class="form-row">
+                        <label>压缩地址:</label>
+                        <input type="text" id="ipv6Compress" class="cidr-input" style="width: 320px; flex: 1;" value="2001:4860:4860::8888">
+                        <button onclick="expandIpv6()">扩展</button>
+                    </div>
+                    <div class="result-group">
+                        <label>📏 扩展地址</label>
+                        <div class="ip-display" id="ipv6ExpandResult">-</div>
+                    </div>
+                </div>
+                
+                <!-- IPv6 地址范围计算 -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h3><span>📊</span> IPv6 地址范围计算</h3>
+                    <div class="form-row">
+                        <label>IPv6 前缀:</label>
+                        <input type="text" id="ipv6Prefix" class="cidr-input" style="width: 300px; flex: 1;" value="2001:0db8:0000:0000:0000:0000:0000:0000">
+                        <label>掩码位:</label>
+                        <input type="number" id="ipv6PrefixLen" class="cidr-input" value="64" min="0" max="128">
+                        <button onclick="calculateIpv6Range()">计算</button>
+                    </div>
+                    <div class="result-group">
+                        <label>🚀 子网起始地址</label>
+                        <div class="ip-display" id="ipv6RangeStart">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🏁 子网结束地址</label>
+                        <div class="ip-display" id="ipv6RangeEnd">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 网络工程工具 -->
+        <div id="network-tools-section" class="calculator-section">
+            <div class="grid">
+                <!-- MAC 地址工具 -->
+                <div class="card">
+                    <h3><span>🔖</span> MAC 地址工具</h3>
+                    <div class="form-row">
+                        <label>MAC 地址:</label>
+                        <input type="text" id="macInput" class="cidr-input" style="width: 200px; flex: 1;" value="00:1A:2B:3C:4D:5E" placeholder="00:1A:2B:3C:4D:5E">
+                        <button onclick="convertMac()">转换</button>
+                    </div>
+                    <div class="result-group">
+                        <label>📌 标准格式 (冒号分隔)</label>
+                        <div class="ip-display" id="macColon">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>📌 Cisco 格式 (点号分隔)</label>
+                        <div class="ip-display" id="macDot">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>📌 无分隔格式</label>
+                        <div class="ip-display" id="macPlain">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>🔗 EUI-64 (IPv6 接口 ID)</label>
+                        <div class="ip-display" id="macEui64">-</div>
+                    </div>
+                </div>
+
+                <!-- 端口号速查 -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h3><span>🔌</span> 端口号速查表</h3>
+                    <p class="hint">包含常用服务端口及安全检测端口（⚠️ 标记为恶意软件常用端口）</p>
+                    <div class="form-row">
+                        <label>分类:</label>
+                        <select id="portCategory" class="cidr-input" style="width: 140px;" onchange="filterPorts()">
+                            <option value="all">全部端口</option>
+                            <option value="system">系统服务 (0-1023)</option>
+                            <option value="user">用户应用 (1024-49151)</option>
+                            <option value="security">🔒 安全检测</option>
+                        </select>
+                        <label>搜索:</label>
+                        <input type="text" id="portSearch" class="cidr-input" style="width: 200px; flex: 1;" placeholder="输入端口号或服务名..." oninput="filterPorts()">
+                    </div>
+                    <div class="result-group" style="max-height: 450px; overflow-y: auto;">
+                        <div class="table-scroll-wrapper">
+                            <table class="result-table wide" id="portTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 80px;">端口</th>
+                                        <th style="width: 70px;">协议</th>
+                                        <th style="width: 140px;">服务</th>
+                                        <th>说明</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="portTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 13px; color: #6b7280;">
+                        <span style="margin-right: 16px;">📊 总计：<strong id="portTotalCount">0</strong> 个端口</span>
+                        <span>🔒 安全检测端口：<strong id="securityPortCount" style="color: #ef4444;">0</strong> 个</span>
+                    </div>
+                </div>
+
+                <!-- VLSM 子网划分器 -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h3><span>📐</span> VLSM 子网划分器</h3>
+                    <p class="hint">将大网段划分为多个不同大小的子网（可变长子网掩码）</p>
+                    <div class="form-row">
+                        <label>网络地址:</label>
+                        <input type="text" id="vlsmNetwork" class="cidr-input" style="width: 200px;" value="192.168.1.0" placeholder="192.168.1.0">
+                        <label>原始掩码:</label>
+                        <input type="number" id="vlsmOriginalCidr" class="cidr-input" value="24" min="0" max="32">
+                    </div>
+                    <div class="form-row" id="vlsmSubnets">
+                        <label>子网需求:</label>
+                        <input type="number" class="cidr-input vlsm-hosts" value="50" min="1" placeholder="主机数">
+                        <input type="number" class="cidr-input vlsm-hosts" value="20" min="1" placeholder="主机数">
+                        <input type="number" class="cidr-input vlsm-hosts" value="10" min="1" placeholder="主机数">
+                        <input type="number" class="cidr-input vlsm-hosts" value="5" min="1" placeholder="主机数">
+                        <button onclick="addVlsmSubnet()">+ 添加</button>
+                        <button class="clear" onclick="clearVlsmSubnets()">清除</button>
+                    </div>
+                    <button onclick="calculateVlsm()" style="margin-top: 12px;">📐 开始划分</button>
+                    <div class="result-group" style="margin-top: 18px;">
+                        <div class="table-scroll-wrapper">
+                            <table class="result-table extra-wide" id="vlsmResultTable">
+                                <thead>
+                                    <tr>
+                                        <th>子网</th>
+                                        <th>CIDR</th>
+                                        <th>子网掩码</th>
+                                        <th>可用地址</th>
+                                        <th>地址范围</th>
+                                        <th>广播地址</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vlsmResultBody">
+                                    <tr><td colspan="6" style="text-align: center; color: #9ca3af;">点击"开始划分"查看结果</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 网络带宽计算 -->
+                <div class="card">
+                    <h3><span>📊</span> 网络带宽计算</h3>
+                    <div class="form-row">
+                        <label>文件大小:</label>
+                        <input type="number" id="fileSize" class="cidr-input" value="100" min="0">
+                        <select id="fileSizeUnit" class="cidr-input" style="width: 80px;">
+                            <option value="MB">MB</option>
+                            <option value="GB">GB</option>
+                            <option value="TB">TB</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>带宽速度:</label>
+                        <input type="number" id="bandwidth" class="cidr-input" value="100" min="0">
+                        <select id="bandwidthUnit" class="cidr-input" style="width: 80px;">
+                            <option value="Mbps">Mbps</option>
+                            <option value="Gbps">Gbps</option>
+                        </select>
+                    </div>
+                    <button onclick="calculateBandwidth()">计算传输时间</button>
+                    <div class="result-group">
+                        <label>⏱️ 理论传输时间</label>
+                        <div class="ip-display" id="transferTime">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>📦 文件大小 (Bits)</label>
+                        <div class="ip-display" id="fileSizeBits">-</div>
+                    </div>
+                </div>
+
+                <!-- IP 归属判断 -->
+                <div class="card">
+                    <h3><span>✅</span> IP 归属判断</h3>
+                    <p class="hint">判断 IP 地址是否属于指定网段</p>
+                    <div class="form-row">
+                        <label>IP 地址:</label>
+                        <input type="text" id="checkIp" class="cidr-input" style="width: 150px;" value="192.168.1.100" placeholder="192.168.1.100">
+                    </div>
+                    <div class="form-row">
+                        <label>网段:</label>
+                        <input type="text" id="checkNetwork" class="cidr-input" style="width: 150px;" value="192.168.1.0" placeholder="192.168.1.0">
+                        <span>/</span>
+                        <input type="number" id="checkCidr" class="cidr-input" value="24" min="0" max="32">
+                    </div>
+                    <button onclick="checkIpInNetwork()">判断</button>
+                    <div class="result-group">
+                        <label>🎯 判断结果</label>
+                        <div class="ip-display" id="checkResult">-</div>
+                    </div>
+                    <div class="result-group">
+                        <label>📊 网段范围</label>
+                        <div class="ip-display" id="checkRange">-</div>
+                    </div>
+                </div>
+
+                <!-- CIDR 聚合 -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h3><span>🔄</span> CIDR 聚合</h3>
+                    <p class="hint">将多个连续的子网聚合成更大的网段（路由汇总）</p>
+                    <div class="form-row">
+                        <label>CIDR 列表:</label>
+                        <textarea id="cidrList" class="cidr-input" style="width: 100%; height: 100px; font-family: monospace;" placeholder="192.168.0.0/24&#10;192.168.1.0/24&#10;192.168.2.0/24&#10;192.168.3.0/24">192.168.0.0/24
+192.168.1.0/24
+192.168.2.0/24
+192.168.3.0/24</textarea>
+                    </div>
+                    <button onclick="aggregateCidr()">聚合</button>
+                    <div class="result-group">
+                        <label>📦 聚合结果</label>
+                        <div class="ip-display" id="aggregateResult">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 信息说明 -->
+        <div class="info-section">
+            <h2>📚 关于 IP 地址</h2>
+            
+            <h3>IPv4 地址</h3>
+            <p>IPv4 地址是 32 位二进制数，通常表示为 4 个十进制数（0-255），用点号分隔，如 192.168.0.1</p>
+            <p>CIDR（无类别域间路由）表示法：192.168.0.0/24 表示前 24 位是网络位，后 8 位是主机位</p>
+            
+            <h3>IPv6 地址</h3>
+            <p>IPv6 地址是 128 位二进制数，通常表示为 8 组 4 位十六进制数，用冒号分隔</p>
+            <p>压缩规则：连续的 0 可以用::代替，但只能使用一次</p>
+            
+            <h3>反掩码（通配符掩码）</h3>
+            <p>反掩码是子网掩码的按位取反，常用于 ACL（访问控制列表）配置</p>
+            <p>例如：子网掩码 255.255.255.0 的反掩码是 0.0.0.255</p>
+
+            <h3>新增网络工具</h3>
+            <ul>
+                <li><strong>MAC 地址工具：</strong>支持多种格式转换及 EUI-64 生成（用于 IPv6 无状态地址配置）</li>
+                <li><strong>端口速查：</strong>内置常用端口号数据库，支持快速搜索</li>
+                <li><strong>VLSM 子网划分：</strong>可变长子网掩码计算，优化 IP 地址分配</li>
+                <li><strong>带宽计算：</strong>估算文件传输时间，支持多种单位</li>
+                <li><strong>IP 归属判断：</strong>快速判断 IP 是否属于指定网段</li>
+                <li><strong>CIDR 聚合：</strong>路由汇总工具，将多个子网聚合成更大网段</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>💻 增强版 IP 地址计算器 | 所有计算均在本地完成，无需联网</p>
+            <p style="margin-top: 8px; font-size: 13px; opacity: 0.8;">✨ Powered by Fread.Z | 网络工程工具箱</p>
+        </div>
+    </div>
+    
+    <script>
+        // 切换标签页
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.calculator-section').forEach(s => s.classList.remove('active'));
+            
+            if (tab === 'ipv4') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('ipv4-section').classList.add('active');
+            } else if (tab === 'ipv6') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('ipv6-section').classList.add('active');
+            } else {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('network-tools-section').classList.add('active');
+            }
+        }
+        
+        // CIDR 转掩码
+        function cidrToMask(cidr) {
+            const mask = [];
+            for (let i = 0; i < 4; i++) {
+                const bits = Math.min(8, Math.max(0, cidr - i * 8));
+                mask.push(256 - Math.pow(2, 8 - bits));
+            }
+            return mask;
+        }
+        
+        // 掩码转 CIDR
+        function maskToCidr(mask) {
+            let cidr = 0;
+            for (let i = 0; i < 4; i++) {
+                const octet = mask[i];
+                for (let j = 7; j >= 0; j--) {
+                    if (octet & (1 << j)) {
+                        cidr++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            return cidr;
+        }
+        
+        // IP 字符串转数组
+        function ipToArray(ipStr) {
+            return ipStr.split('.').map(o => parseInt(o) || 0);
+        }
+        
+        // IP 数组转字符串
+        function arrayToIp(arr) {
+            return arr.join('.');
+        }
+        
+        // IP 转整数
+        function ipToInt(ip) {
+            const arr = typeof ip === 'string' ? ipToArray(ip) : ip;
+            return ((arr[0] << 24) + (arr[1] << 16) + (arr[2] << 8) + arr[3]) >>> 0;
+        }
+        
+        // 整数转 IP
+        function intToIp(int) {
+            return [
+                (int >>> 24) & 0xFF,
+                (int >>> 16) & 0xFF,
+                (int >>> 8) & 0xFF,
+                int & 0xFF
+            ].join('.');
+        }
+        
+        // 网络和 IP 地址计算
+        function calculateNetwork() {
+            const ip = [
+                parseInt(document.getElementById('ip1').value) || 0,
+                parseInt(document.getElementById('ip2').value) || 0,
+                parseInt(document.getElementById('ip3').value) || 0,
+                parseInt(document.getElementById('ip4').value) || 0
+            ];
+            const cidr = parseInt(document.getElementById('cidr').value) || 24;
+            
+            const mask = cidrToMask(cidr);
+            const network = ip.map((octet, i) => octet & mask[i]);
+            const broadcast = ip.map((octet, i) => octet | (255 - mask[i]));
+            
+            const totalHosts = Math.pow(2, 32 - cidr);
+            const usableHosts = cidr >= 31 ? (cidr === 31 ? 2 : 0) : totalHosts - 2;
+            
+            const firstUsable = cidr >= 31 ? network : network.map((o, i) => i === 3 ? o + 1 : o);
+            const lastUsable = cidr >= 31 ? broadcast : broadcast.map((o, i) => i === 3 ? o - 1 : o);
+            
+            document.getElementById('usableHosts').textContent = usableHosts.toLocaleString();
+            document.getElementById('subnetMask').textContent = mask.join('.');
+            document.getElementById('networkAddr').textContent = network.join('.');
+            document.getElementById('firstUsable').textContent = firstUsable.join('.');
+            document.getElementById('lastUsable').textContent = lastUsable.join('.');
+            document.getElementById('broadcastAddr').textContent = broadcast.join('.');
+        }
+        
+        function clearNetwork() {
+            document.getElementById('ip1').value = 192;
+            document.getElementById('ip2').value = 168;
+            document.getElementById('ip3').value = 0;
+            document.getElementById('ip4').value = 1;
+            document.getElementById('cidr').value = 24;
+            document.getElementById('usableHosts').textContent = '-';
+            document.getElementById('subnetMask').textContent = '-';
+            document.getElementById('networkAddr').textContent = '-';
+            document.getElementById('firstUsable').textContent = '-';
+            document.getElementById('lastUsable').textContent = '-';
+            document.getElementById('broadcastAddr').textContent = '-';
+        }
+        
+        function copyResults() {
+            const text = `网络地址：${document.getElementById('networkAddr').textContent}
+广播地址：${document.getElementById('broadcastAddr').textContent}
+子网掩码：${document.getElementById('subnetMask').textContent}
+可用地址：${document.getElementById('usableHosts').textContent}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ 已复制到剪贴板');
+            });
+        }
+        
+        // 通过 CIDR 计算子网掩码
+        function calculateCidrMask() {
+            const cidr = parseInt(document.getElementById('cidrMask').value) || 24;
+            const mask = cidrToMask(cidr);
+            const total = Math.pow(2, 32 - cidr);
+            const usable = cidr >= 31 ? (cidr === 31 ? 2 : 0) : total - 2;
+            
+            document.getElementById('cidrHosts').textContent = usable.toLocaleString();
+            document.getElementById('cidrTotal').textContent = total.toLocaleString();
+            document.getElementById('cidrMaskResult').textContent = mask.join('.');
+        }
+        
+        function clearCidrMask() {
+            document.getElementById('cidrMask').value = 24;
+            document.getElementById('cidrHosts').textContent = '-';
+            document.getElementById('cidrTotal').textContent = '-';
+            document.getElementById('cidrMaskResult').textContent = '-';
+        }
+        
+        // 通过主机数计算子网掩码
+        function calculateHostMask() {
+            const hosts = parseInt(document.getElementById('hostCount').value) || 1;
+            let hostBits = 0;
+            while (Math.pow(2, hostBits) - 2 < hosts) {
+                hostBits++;
+            }
+            const cidr = 32 - hostBits;
+            const mask = cidrToMask(cidr);
+            const usable = Math.pow(2, hostBits) - 2;
+            
+            document.getElementById('hostCidr').textContent = cidr;
+            document.getElementById('hostMaskResult').textContent = mask.join('.');
+            document.getElementById('hostUsable').textContent = usable.toLocaleString();
+        }
+        
+        function clearHostMask() {
+            document.getElementById('hostCount').value = 5;
+            document.getElementById('hostCidr').textContent = '-';
+            document.getElementById('hostMaskResult').textContent = '-';
+            document.getElementById('hostUsable').textContent = '-';
+        }
+        
+        // IP 进制转换
+        function convertFromDec() {
+            const ip = [
+                parseInt(document.getElementById('dec1').value) || 0,
+                parseInt(document.getElementById('dec2').value) || 0,
+                parseInt(document.getElementById('dec3').value) || 0,
+                parseInt(document.getElementById('dec4').value) || 0
+            ];
+            
+            const binary = ip.map(o => o.toString(2).padStart(8, '0')).join('.');
+            const hex = ip.map(o => o.toString(16).toUpperCase().padStart(2, '0')).join('.');
+            const intVal = (ip[0] << 24) + (ip[1] << 16) + (ip[2] << 8) + ip[3];
+            
+            document.getElementById('binaryResult').textContent = binary;
+            document.getElementById('hexResult').textContent = hex;
+            document.getElementById('intResult').textContent = intVal >>> 0;
+        }
+        
+        // 子网掩码换算器
+        function calculateMaskToCidr() {
+            const mask = [
+                parseInt(document.getElementById('mask1').value) || 0,
+                parseInt(document.getElementById('mask2').value) || 0,
+                parseInt(document.getElementById('mask3').value) || 0,
+                parseInt(document.getElementById('mask4').value) || 0
+            ];
+            
+            const cidr = maskToCidr(mask);
+            document.getElementById('maskCidrResult').textContent = cidr;
+        }
+        
+        // 子网掩码逆算器 - 计算反掩码
+        function calculateInverseMask() {
+            const o1 = parseInt(document.getElementById('invMask1').value) || 0;
+            const o2 = parseInt(document.getElementById('invMask2').value) || 0;
+            const o3 = parseInt(document.getElementById('invMask3').value) || 0;
+            const o4 = parseInt(document.getElementById('invMask4').value) || 0;
+            
+            // 按位取反计算反掩码
+            const r1 = 255 - o1;
+            const r2 = 255 - o2;
+            const r3 = 255 - o3;
+            const r4 = 255 - o4;
+            
+            document.getElementById('invResult1').textContent = r1;
+            document.getElementById('invResult2').textContent = r2;
+            document.getElementById('invResult3').textContent = r3;
+            document.getElementById('invResult4').textContent = r4;
+        }
+        
+        // IPv6 转数字
+        function ipv6ToNumber() {
+            const ipv6 = document.getElementById('ipv6ToNum').value.trim();
+            try {
+                const expanded = expandIpv6Address(ipv6);
+                const hex = expanded.replace(/:/g, '');
+                const num = BigInt('0x' + hex);
+                document.getElementById('ipv6NumberResult').textContent = num.toString();
+            } catch (e) {
+                document.getElementById('ipv6NumberResult').textContent = '❌ 无效的 IPv6 地址';
+            }
+        }
+        
+        // 数字转 IPv6
+        function numberToIpv6() {
+            const numStr = document.getElementById('numToIpv6').value.trim();
+            try {
+                const num = BigInt(numStr);
+                const hex = num.toString(16).padStart(32, '0');
+                const groups = [];
+                for (let i = 0; i < 8; i++) {
+                    groups.push(hex.substr(i * 4, 4));
+                }
+                document.getElementById('ipv6AddrResult').textContent = groups.join(':');
+            } catch (e) {
+                document.getElementById('ipv6AddrResult').textContent = '❌ 无效的数字';
+            }
+        }
+        
+        // 扩展 IPv6 地址
+        function expandIpv6Address(ipv6) {
+            // 处理::
+            if (ipv6.includes('::')) {
+                const parts = ipv6.split('::');
+                const left = parts[0] ? parts[0].split(':') : [];
+                const right = parts[1] ? parts[1].split(':') : [];
+                const missing = 8 - left.length - right.length;
+                const zeros = new Array(missing).fill('0000');
+                return [...left, ...zeros, ...right].map(g => g.padStart(4, '0')).join(':');
+            }
+            return ipv6.split(':').map(g => g.padStart(4, '0')).join(':');
+        }
+        
+        // 压缩 IPv6
+        function compressIpv6() {
+            const ipv6 = document.getElementById('ipv6Expand').value.trim();
+            try {
+                const expanded = expandIpv6Address(ipv6);
+                const groups = expanded.split(':');
+                
+                // 找到最长的连续 0 序列
+                let maxStart = -1;
+                let maxLen = 0;
+                let curStart = -1;
+                let curLen = 0;
+                
+                for (let i = 0; i < groups.length; i++) {
+                    if (groups[i] === '0000') {
+                        if (curStart === -1) curStart = i;
+                        curLen++;
+                    } else {
+                        if (curLen > maxLen) {
+                            maxStart = curStart;
+                            maxLen = curLen;
+                        }
+                        curStart = -1;
+                        curLen = 0;
+                    }
+                }
+                if (curLen > maxLen) {
+                    maxStart = curStart;
+                    maxLen = curLen;
+                }
+                
+                // 压缩
+                if (maxLen > 1) {
+                    const before = groups.slice(0, maxStart).map(g => g.replace(/^0+/, '') || '0');
+                    const after = groups.slice(maxStart + maxLen).map(g => g.replace(/^0+/, '') || '0');
+                    document.getElementById('ipv6CompressResult').textContent = before.join(':') + '::' + after.join(':');
+                } else {
+                    document.getElementById('ipv6CompressResult').textContent = groups.map(g => g.replace(/^0+/, '') || '0').join(':');
+                }
+            } catch (e) {
+                document.getElementById('ipv6CompressResult').textContent = '❌ 无效的 IPv6 地址';
+            }
+        }
+        
+        // 扩展 IPv6
+        function expandIpv6() {
+            const ipv6 = document.getElementById('ipv6Compress').value.trim();
+            try {
+                const expanded = expandIpv6Address(ipv6);
+                document.getElementById('ipv6ExpandResult').textContent = expanded;
+            } catch (e) {
+                document.getElementById('ipv6ExpandResult').textContent = '❌ 无效的 IPv6 地址';
+            }
+        }
+        
+        // IPv6 地址范围计算
+        function calculateIpv6Range() {
+            const prefix = document.getElementById('ipv6Prefix').value.trim();
+            const prefixLen = parseInt(document.getElementById('ipv6PrefixLen').value) || 64;
+            
+            try {
+                const expanded = expandIpv6Address(prefix);
+                const hex = expanded.replace(/:/g, '');
+                const num = BigInt('0x' + hex);
+                
+                // 计算网络掩码
+                const networkMask = (BigInt(1) << BigInt(128)) - (BigInt(1) << BigInt(128 - prefixLen));
+                const startNum = num & networkMask;
+                const endNum = startNum | ((BigInt(1) << BigInt(128 - prefixLen)) - BigInt(1));
+                
+                // 转回 IPv6 格式
+                const startHex = startNum.toString(16).padStart(32, '0');
+                const endHex = endNum.toString(16).padStart(32, '0');
+                
+                const startGroups = [];
+                const endGroups = [];
+                for (let i = 0; i < 8; i++) {
+                    startGroups.push(startHex.substr(i * 4, 4));
+                    endGroups.push(endHex.substr(i * 4, 4));
+                }
+                
+                document.getElementById('ipv6RangeStart').textContent = startGroups.join(':');
+                document.getElementById('ipv6RangeEnd').textContent = endGroups.join(':');
+            } catch (e) {
+                document.getElementById('ipv6RangeStart').textContent = '❌ 计算错误';
+                document.getElementById('ipv6RangeEnd').textContent = '❌ 计算错误';
+            }
+        }
+
+        // ========== 网络工程工具 ==========
+
+        // MAC 地址转换
+        function parseMac(mac) {
+            // 移除所有分隔符，转为大写
+            const clean = mac.replace(/[:.\-]/g, '').toUpperCase();
+            if (clean.length !== 12 || !/^[0-9A-F]+$/.test(clean)) {
+                return null;
+            }
+            return clean;
+        }
+
+        function convertMac() {
+            const mac = document.getElementById('macInput').value.trim();
+            const parsed = parseMac(mac);
+            
+            if (!parsed) {
+                document.getElementById('macColon').textContent = '❌ 无效 MAC 地址';
+                document.getElementById('macDot').textContent = '❌';
+                document.getElementById('macPlain').textContent = '❌';
+                document.getElementById('macEui64').textContent = '❌';
+                return;
+            }
+            
+            // 标准格式 (冒号分隔)
+            const colon = parsed.match(/.{1,2}/g).join(':');
+            document.getElementById('macColon').textContent = colon;
+            
+            // Cisco 格式 (点号分隔，每 4 位)
+            const dot = parsed.match(/.{1,4}/g).join('.');
+            document.getElementById('macDot').textContent = dot;
+            
+            // 无分隔
+            document.getElementById('macPlain').textContent = parsed;
+            
+            // EUI-64 (用于 IPv6 接口 ID)
+            const firstByte = parseInt(parsed.substr(0, 2), 16);
+            const modifiedFirst = (firstByte ^ 0x02).toString(16).toUpperCase().padStart(2, '0');
+            const eui64 = modifiedFirst + parsed.substr(2, 6) + 'FFFE' + parsed.substr(6, 6);
+            const eui64Formatted = eui64.match(/.{1,4}/g).join(':');
+            document.getElementById('macEui64').textContent = eui64Formatted;
+        }
+
+        // 端口号数据库 - 包含常用服务端口和安全检测端口
+        const portDatabase = [
+            // ========== 系统服务端口 (0-1023) ==========
+            { port: 1, protocol: 'TCP', service: 'TCPMUX', desc: 'TCP 端口多路复用器', category: 'system' },
+            { port: 7, protocol: 'BOTH', service: 'Echo', desc: '回显协议（测试用）', category: 'system' },
+            { port: 20, protocol: 'TCP', service: 'FTP-DATA', desc: '文件传输协议 - 数据', category: 'system' },
+            { port: 21, protocol: 'TCP', service: 'FTP', desc: '文件传输协议 - 控制', category: 'system' },
+            { port: 22, protocol: 'TCP', service: 'SSH', desc: '安全外壳协议', category: 'system' },
+            { port: 23, protocol: 'TCP', service: 'Telnet', desc: '远程终端协议（不安全）', category: 'system' },
+            { port: 25, protocol: 'TCP', service: 'SMTP', desc: '简单邮件传输协议', category: 'system' },
+            { port: 42, protocol: 'TCP', service: 'WINS', desc: 'Windows 名称服务', category: 'system' },
+            { port: 53, protocol: 'BOTH', service: 'DNS', desc: '域名系统', category: 'system' },
+            { port: 67, protocol: 'UDP', service: 'DHCP Server', desc: '动态主机配置 - 服务端', category: 'system' },
+            { port: 68, protocol: 'UDP', service: 'DHCP Client', desc: '动态主机配置 - 客户端', category: 'system' },
+            { port: 69, protocol: 'UDP', service: 'TFTP', desc: '简单文件传输协议', category: 'system' },
+            { port: 79, protocol: 'TCP', service: 'Finger', desc: '用户信息查询', category: 'system' },
+            { port: 80, protocol: 'TCP', service: 'HTTP', desc: '超文本传输协议', category: 'system' },
+            { port: 88, protocol: 'BOTH', service: 'Kerberos', desc: 'Kerberos 认证协议', category: 'system' },
+            { port: 110, protocol: 'TCP', service: 'POP3', desc: '邮局协议 v3', category: 'system' },
+            { port: 111, protocol: 'BOTH', service: 'RPC', desc: '远程过程调用', category: 'system' },
+            { port: 119, protocol: 'TCP', service: 'NNTP', desc: '网络新闻传输协议', category: 'system' },
+            { port: 123, protocol: 'UDP', service: 'NTP', desc: '网络时间协议', category: 'system' },
+            { port: 135, protocol: 'TCP', service: 'DCOM', desc: 'Windows DCOM/RPC', category: 'system' },
+            { port: 137, protocol: 'UDP', service: 'NetBIOS-NS', desc: 'NetBIOS 名称服务', category: 'system' },
+            { port: 138, protocol: 'UDP', service: 'NetBIOS-DGM', desc: 'NetBIOS 数据报服务', category: 'system' },
+            { port: 139, protocol: 'TCP', service: 'NetBIOS-SSN', desc: 'NetBIOS 会话服务', category: 'system' },
+            { port: 143, protocol: 'TCP', service: 'IMAP', desc: '互联网消息访问协议', category: 'system' },
+            { port: 161, protocol: 'UDP', service: 'SNMP', desc: '简单网络管理协议', category: 'system' },
+            { port: 162, protocol: 'UDP', service: 'SNMP Trap', desc: 'SNMP 陷阱', category: 'system' },
+            { port: 177, protocol: 'UDP', service: 'XDMCP', desc: 'X 显示管理器协议', category: 'system' },
+            { port: 179, protocol: 'TCP', service: 'BGP', desc: '边界网关协议', category: 'system' },
+            { port: 389, protocol: 'BOTH', service: 'LDAP', desc: '轻量级目录访问协议', category: 'system' },
+            { port: 443, protocol: 'TCP', service: 'HTTPS', desc: '安全超文本传输协议', category: 'system' },
+            { port: 445, protocol: 'TCP', service: 'SMB', desc: 'Windows 文件共享', category: 'system' },
+            { port: 464, protocol: 'BOTH', service: 'Kpasswd', desc: 'Kerberos 密码修改', category: 'system' },
+            { port: 465, protocol: 'TCP', service: 'SMTPS', desc: 'SMTP over SSL', category: 'system' },
+            { port: 514, protocol: 'UDP', service: 'Syslog', desc: '系统日志协议', category: 'system' },
+            { port: 515, protocol: 'TCP', service: 'LPD', desc: '行式打印机守护进程', category: 'system' },
+            { port: 587, protocol: 'TCP', service: 'SMTP', desc: '邮件提交端口', category: 'system' },
+            { port: 631, protocol: 'TCP', service: 'IPP', desc: '互联网打印协议', category: 'system' },
+            { port: 636, protocol: 'TCP', service: 'LDAPS', desc: 'LDAP over SSL', category: 'system' },
+            { port: 993, protocol: 'TCP', service: 'IMAPS', desc: 'IMAP over SSL', category: 'system' },
+            { port: 995, protocol: 'TCP', service: 'POP3S', desc: 'POP3 over SSL', category: 'system' },
+            { port: 1080, protocol: 'TCP', service: 'SOCKS', desc: 'SOCKS 代理服务器', category: 'user' },
+            
+            // ========== 用户端口 (1024-49151) ==========
+            { port: 1433, protocol: 'TCP', service: 'MSSQL', desc: 'Microsoft SQL Server', category: 'user' },
+            { port: 1434, protocol: 'UDP', service: 'MSSQL-Browser', desc: 'SQL Server 浏览器', category: 'user' },
+            { port: 1521, protocol: 'TCP', service: 'Oracle', desc: 'Oracle 数据库', category: 'user' },
+            { port: 1723, protocol: 'TCP', service: 'PPTP', desc: 'PPTP VPN 协议', category: 'user' },
+            { port: 2049, protocol: 'BOTH', service: 'NFS', desc: '网络文件系统', category: 'user' },
+            { port: 2082, protocol: 'TCP', service: 'cPanel', desc: 'cPanel 控制面板', category: 'user' },
+            { port: 2083, protocol: 'TCP', service: 'cPanel-SSL', desc: 'cPanel 安全登录', category: 'user' },
+            { port: 2086, protocol: 'TCP', service: 'WHM', desc: 'WHM 主机管理', category: 'user' },
+            { port: 2087, protocol: 'TCP', service: 'WHM-SSL', desc: 'WHM 安全登录', category: 'user' },
+            { port: 2181, protocol: 'TCP', service: 'ZooKeeper', desc: 'ZooKeeper 服务', category: 'user' },
+            { port: 3306, protocol: 'TCP', service: 'MySQL', desc: 'MySQL 数据库', category: 'user' },
+            { port: 3389, protocol: 'TCP', service: 'RDP', desc: '远程桌面协议', category: 'user' },
+            { port: 3690, protocol: 'TCP', service: 'SVN', desc: 'Subversion 版本控制', category: 'user' },
+            { port: 4369, protocol: 'TCP', service: 'epmd', desc: 'Erlang 端口映射', category: 'user' },
+            { port: 5000, protocol: 'TCP', service: 'UPnP', desc: '通用即插即用', category: 'user' },
+            { port: 5001, protocol: 'TCP', service: 'CommLink', desc: 'CommLink 通信', category: 'user' },
+            { port: 5432, protocol: 'TCP', service: 'PostgreSQL', desc: 'PostgreSQL 数据库', category: 'user' },
+            { port: 5632, protocol: 'TCP', service: 'pcAnywhere', desc: 'Symantec 远程控制', category: 'user' },
+            { port: 5666, protocol: 'TCP', service: 'NRPE', desc: 'Nagios 远程执行', category: 'user' },
+            { port: 5667, protocol: 'TCP', service: 'NSCA', desc: 'Nagios 监控代理', category: 'user' },
+            { port: 5900, protocol: 'TCP', service: 'VNC', desc: '虚拟网络计算', category: 'user' },
+            { port: 5901, protocol: 'TCP', service: 'VNC-1', desc: 'VNC 显示 1', category: 'user' },
+            { port: 5902, protocol: 'TCP', service: 'VNC-2', desc: 'VNC 显示 2', category: 'user' },
+            { port: 5984, protocol: 'TCP', service: 'CouchDB', desc: 'CouchDB 数据库', category: 'user' },
+            { port: 6379, protocol: 'TCP', service: 'Redis', desc: 'Redis 数据库', category: 'user' },
+            { port: 6443, protocol: 'TCP', service: 'K8s-API', desc: 'Kubernetes API', category: 'user' },
+            { port: 6660, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6661, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6662, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6663, protocol: 'TCP', service: 'IRC-SSL', desc: 'IRC 安全聊天', category: 'user' },
+            { port: 6664, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6665, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6666, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6667, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6668, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 6669, protocol: 'TCP', service: 'IRC', desc: 'IRC 聊天协议', category: 'user' },
+            { port: 7001, protocol: 'TCP', service: 'WebLogic', desc: 'WebLogic 服务器', category: 'user' },
+            { port: 7002, protocol: 'TCP', service: 'WebLogic-SSL', desc: 'WebLogic 安全', category: 'user' },
+            { port: 8000, protocol: 'TCP', service: 'HTTP-Alt', desc: 'HTTP 备用端口', category: 'user' },
+            { port: 8008, protocol: 'TCP', service: 'HTTP-Alt', desc: 'HTTP 替代端口', category: 'user' },
+            { port: 8080, protocol: 'TCP', service: 'HTTP-Proxy', desc: 'HTTP 代理/备用', category: 'user' },
+            { port: 8081, protocol: 'TCP', service: 'HTTP-Alt', desc: 'HTTP 备用端口', category: 'user' },
+            { port: 8443, protocol: 'TCP', service: 'HTTPS-Alt', desc: 'HTTPS 备用端口', category: 'user' },
+            { port: 8888, protocol: 'TCP', service: 'HTTP-Alt', desc: 'HTTP 替代端口', category: 'user' },
+            { port: 9000, protocol: 'TCP', service: 'PHP-FPM', desc: 'PHP FastCGI', category: 'user' },
+            { port: 9042, protocol: 'TCP', service: 'Cassandra', desc: 'Cassandra 数据库', category: 'user' },
+            { port: 9090, protocol: 'TCP', service: 'Prometheus', desc: 'Prometheus 监控', category: 'user' },
+            { port: 9200, protocol: 'TCP', service: 'Elasticsearch', desc: 'Elasticsearch HTTP', category: 'user' },
+            { port: 9300, protocol: 'TCP', service: 'Elasticsearch', desc: 'Elasticsearch 集群', category: 'user' },
+            { port: 9933, protocol: 'TCP', service: 'rsh', desc: '远程 Shell（不安全）', category: 'user' },
+            { port: 11211, protocol: 'TCP', service: 'Memcached', desc: 'Memcached 缓存', category: 'user' },
+            { port: 11300, protocol: 'TCP', service: 'Beanstalkd', desc: 'Beanstalkd 队列', category: 'user' },
+            { port: 15672, protocol: 'TCP', service: 'RabbitMQ', desc: 'RabbitMQ 管理', category: 'user' },
+            { port: 25565, protocol: 'TCP', service: 'Minecraft', desc: 'Minecraft 服务器', category: 'user' },
+            { port: 27017, protocol: 'TCP', service: 'MongoDB', desc: 'MongoDB 数据库', category: 'user' },
+            { port: 27018, protocol: 'TCP', service: 'MongoDB', desc: 'MongoDB 分片', category: 'user' },
+            { port: 28017, protocol: 'TCP', service: 'MongoDB-HTTP', desc: 'MongoDB HTTP 接口', category: 'user' },
+            
+            // ========== 安全检测：恶意软件/木马/后门常用端口 ==========
+            { port: 4444, protocol: 'TCP', service: '⚠️ Metasploit', desc: 'Metasploit 默认监听端口', category: 'security' },
+            { port: 5555, protocol: 'TCP', service: '⚠️ Android-ADB', desc: 'Android 调试桥（可能被滥用）', category: 'security' },
+            { port: 6666, protocol: 'TCP', service: '⚠️ IRC-Backdoor', desc: 'IRC 后门通信', category: 'security' },
+            { port: 7777, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 8888, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 9999, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 12345, protocol: 'TCP', service: '⚠️ NetBus', desc: 'NetBus 木马', category: 'security' },
+            { port: 12434, protocol: 'TCP', service: '⚠️ SubSeven', desc: 'SubSeven 木马', category: 'security' },
+            { port: 12346, protocol: 'TCP', service: '⚠️ NetBus', desc: 'NetBus 木马', category: 'security' },
+            { port: 13333, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 14333, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 16969, protocol: 'TCP', service: '⚠️ Priority', desc: 'Priority 木马', category: 'security' },
+            { port: 19999, protocol: 'TCP', service: '⚠️ XHM', desc: 'XHM 木马', category: 'security' },
+            { port: 20000, protocol: 'TCP', service: '⚠️ Millenium', desc: 'Millenium 木马', category: 'security' },
+            { port: 20034, protocol: 'TCP', service: '⚠️ NetBus-Pro', desc: 'NetBus Pro 木马', category: 'security' },
+            { port: 22222, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 23456, protocol: 'TCP', service: '⚠️ Evil-Ftp', desc: 'Evil FTP 木马', category: 'security' },
+            { port: 26274, protocol: 'TCP', service: '⚠️ SubSeven', desc: 'SubSeven 木马', category: 'security' },
+            { port: 27374, protocol: 'TCP', service: '⚠️ SubSeven', desc: 'SubSeven 木马', category: 'security' },
+            { port: 30100, protocol: 'TCP', service: '⚠️ Th3r1p3r', desc: 'Th3r1p3r 木马', category: 'security' },
+            { port: 30303, protocol: 'TCP', service: '⚠️ Socket23', desc: 'Socket23 木马', category: 'security' },
+            { port: 31337, protocol: 'TCP', service: '⚠️ Back-Orifice', desc: 'Back Orifice 木马（经典）', category: 'security' },
+            { port: 31785, protocol: 'TCP', service: '⚠️ Hack-A-Tack', desc: 'Hack-A-Tack 木马', category: 'security' },
+            { port: 31789, protocol: 'TCP', service: '⚠️ Hack-A-Tack', desc: 'Hack-A-Tack 木马', category: 'security' },
+            { port: 33333, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 40412, protocol: 'TCP', service: '⚠️ The-Spy', desc: 'The Spy 木马', category: 'security' },
+            { port: 40421, protocol: 'TCP', service: '⚠️ Agent-40421', desc: 'Agent 40421 木马', category: 'security' },
+            { port: 40422, protocol: 'TCP', service: '⚠️ Agent-40422', desc: 'Agent 40422 木马', category: 'security' },
+            { port: 40423, protocol: 'TCP', service: '⚠️ Agent-40423', desc: 'Agent 40423 木马', category: 'security' },
+            { port: 40426, protocol: 'TCP', service: '⚠️ Agent-40426', desc: 'Agent 40426 木马', category: 'security' },
+            { port: 44444, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 47262, protocol: 'TCP', service: '⚠️ Delta', desc: 'Delta Source 木马', category: 'security' },
+            { port: 49301, protocol: 'TCP', service: '⚠️ OnLine-Key', desc: 'OnLine Key 木马', category: 'security' },
+            { port: 50000, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 50505, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 54321, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 55555, protocol: 'TCP', service: '⚠️ Backdoor', desc: '常见后门端口', category: 'security' },
+            { port: 61466, protocol: 'TCP', service: '⚠️ Telecommando', desc: 'Telecommando 木马', category: 'security' },
+            { port: 65000, protocol: 'TCP', service: '⚠️ Devil', desc: 'Devil 木马', category: 'security' }
+        ];
+
+        function renderPortTable(ports) {
+            const tbody = document.getElementById('portTableBody');
+            tbody.innerHTML = '';
+            
+            if (ports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #9ca3af; padding: 20px;">没有找到匹配的端口</td></tr>';
+                return;
+            }
+            
+            ports.forEach(p => {
+                const tr = document.createElement('tr');
+                const protocolClass = p.protocol.toLowerCase();
+                const isSecurity = p.category === 'security';
+                
+                // 安全检测端口添加特殊样式
+                if (isSecurity) {
+                    tr.style.background = 'rgba(239, 68, 68, 0.05)';
+                }
+                
+                const securityIcon = isSecurity ? '⚠️ ' : '';
+                
+                tr.innerHTML = `
+                    <td><strong>${p.port}</strong></td>
+                    <td><span class="tag ${protocolClass}">${p.protocol}</span></td>
+                    <td>${securityIcon}${p.service}</td>
+                    <td>${p.desc}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterPorts() {
+            const category = document.getElementById('portCategory').value;
+            const search = document.getElementById('portSearch').value.toLowerCase();
+            
+            let filtered = portDatabase;
+            
+            // 按分类筛选
+            if (category === 'system') {
+                filtered = filtered.filter(p => p.category === 'system');
+            } else if (category === 'user') {
+                filtered = filtered.filter(p => p.category === 'user');
+            } else if (category === 'security') {
+                filtered = filtered.filter(p => p.category === 'security');
+            }
+            
+            // 按搜索关键词筛选
+            if (search) {
+                filtered = filtered.filter(p => 
+                    p.port.toString().includes(search) ||
+                    p.service.toLowerCase().includes(search) ||
+                    p.desc.toLowerCase().includes(search)
+                );
+            }
+            
+            renderPortTable(filtered);
+            
+            // 更新计数
+            document.getElementById('portTotalCount').textContent = filtered.length;
+            const securityCount = portDatabase.filter(p => p.category === 'security').length;
+            document.getElementById('securityPortCount').textContent = securityCount;
+        }
+
+        // VLSM 子网划分
+        function addVlsmSubnet() {
+            const container = document.getElementById('vlsmSubnets');
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'cidr-input vlsm-hosts';
+            input.min = '1';
+            input.placeholder = '主机数';
+            input.style.width = '80px';
+            container.insertBefore(input, container.lastElementChild);
+        }
+
+        function clearVlsmSubnets() {
+            const container = document.getElementById('vlsmSubnets');
+            const inputs = container.querySelectorAll('.vlsm-hosts');
+            inputs.forEach((input, index) => {
+                if (index < 4) {
+                    input.value = [50, 20, 10, 5][index];
+                } else {
+                    input.remove();
+                }
+            });
+            document.getElementById('vlsmResultBody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;">点击"开始划分"查看结果</td></tr>';
+        }
+
+        function calculateVlsm() {
+            const networkStr = document.getElementById('vlsmNetwork').value.trim();
+            const originalCidr = parseInt(document.getElementById('vlsmOriginalCidr').value) || 24;
+            const hostInputs = document.querySelectorAll('.vlsm-hosts');
+            
+            const network = ipToArray(networkStr);
+            const networkInt = ipToInt(network);
+            
+            // 收集子网需求
+            const subnets = [];
+            hostInputs.forEach(input => {
+                const hosts = parseInt(input.value);
+                if (hosts > 0) {
+                    let hostBits = 0;
+                    while (Math.pow(2, hostBits) - 2 < hosts) {
+                        hostBits++;
+                    }
+                    const cidr = 32 - hostBits;
+                    const total = Math.pow(2, hostBits);
+                    subnets.push({ hosts, hostBits, cidr, total });
+                }
+            });
+            
+            // 按需求从大到小排序
+            subnets.sort((a, b) => b.hosts - a.hosts);
+            
+            // 分配子网
+            let currentStart = networkInt;
+            const results = [];
+            
+            for (const subnet of subnets) {
+                const subnetNetwork = intToIp(currentStart);
+                const mask = cidrToMask(subnet.cidr);
+                const maskStr = mask.join('.');
+                const usable = subnet.total - 2;
+                const broadcastInt = currentStart + subnet.total - 1;
+                const broadcast = intToIp(broadcastInt);
+                const firstUsable = intToIp(currentStart + 1);
+                const lastUsable = intToIp(broadcastInt - 1);
+                
+                results.push({
+                    network: subnetNetwork,
+                    cidr: subnet.cidr,
+                    mask: maskStr,
+                    usable: usable,
+                    range: `${firstUsable} - ${lastUsable}`,
+                    broadcast: broadcast
+                });
+                
+                currentStart += subnet.total;
+            }
+            
+            // 渲染结果
+            const tbody = document.getElementById('vlsmResultBody');
+            tbody.innerHTML = '';
+            
+            results.forEach((r, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${r.network}</strong></td>
+                    <td>/${r.cidr}</td>
+                    <td>${r.mask}</td>
+                    <td>${r.usable.toLocaleString()}</td>
+                    <td>${r.range}</td>
+                    <td>${r.broadcast}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 网络带宽计算
+        function calculateBandwidth() {
+            const fileSize = parseFloat(document.getElementById('fileSize').value) || 0;
+            const fileSizeUnit = document.getElementById('fileSizeUnit').value;
+            const bandwidth = parseFloat(document.getElementById('bandwidth').value) || 0;
+            const bandwidthUnit = document.getElementById('bandwidthUnit').value;
+            
+            // 转换为 bits
+            let sizeInBits = fileSize;
+            if (fileSizeUnit === 'MB') sizeInBits *= 8 * 1024 * 1024;
+            else if (fileSizeUnit === 'GB') sizeInBits *= 8 * 1024 * 1024 * 1024;
+            else if (fileSizeUnit === 'TB') sizeInBits *= 8 * 1024 * 1024 * 1024 * 1024;
+            
+            // 转换为 bps
+            let speedInBps = bandwidth;
+            if (bandwidthUnit === 'Gbps') speedInBps *= 1000 * 1000 * 1000;
+            else if (bandwidthUnit === 'Mbps') speedInBps *= 1000 * 1000;
+            
+            // 计算时间（秒）
+            const timeSeconds = sizeInBits / speedInBps;
+            
+            // 格式化时间
+            let timeStr;
+            if (timeSeconds < 1) {
+                timeStr = `${(timeSeconds * 1000).toFixed(2)} 毫秒`;
+            } else if (timeSeconds < 60) {
+                timeStr = `${timeSeconds.toFixed(2)} 秒`;
+            } else if (timeSeconds < 3600) {
+                const minutes = Math.floor(timeSeconds / 60);
+                const seconds = (timeSeconds % 60).toFixed(1);
+                timeStr = `${minutes} 分 ${seconds} 秒`;
+            } else {
+                const hours = Math.floor(timeSeconds / 3600);
+                const minutes = Math.floor((timeSeconds % 3600) / 60);
+                timeStr = `${hours} 小时 ${minutes} 分`;
+            }
+            
+            document.getElementById('transferTime').textContent = timeStr;
+            document.getElementById('fileSizeBits').textContent = (sizeInBits / 1000000).toFixed(2) + ' Mbits';
+        }
+
+        // IP 归属判断
+        function checkIpInNetwork() {
+            const ipStr = document.getElementById('checkIp').value.trim();
+            const networkStr = document.getElementById('checkNetwork').value.trim();
+            const cidr = parseInt(document.getElementById('checkCidr').value) || 24;
+            
+            try {
+                const ip = ipToInt(ipStr);
+                const network = ipToInt(networkStr);
+                const mask = cidrToMask(cidr);
+                const maskInt = ipToInt(mask);
+                
+                const ipNetwork = ip & maskInt;
+                const targetNetwork = network & maskInt;
+                
+                const inNetwork = ipNetwork === targetNetwork;
+                
+                const broadcastInt = (targetNetwork | (~maskInt >>> 0));
+                const firstUsable = intToIp(targetNetwork + 1);
+                const lastUsable = intToIp(broadcastInt - 1);
+                
+                if (inNetwork) {
+                    document.getElementById('checkResult').textContent = '✅ 属于该网段';
+                    document.getElementById('checkResult').style.color = '#10b981';
+                } else {
+                    document.getElementById('checkResult').textContent = '❌ 不属于该网段';
+                    document.getElementById('checkResult').style.color = '#ef4444';
+                }
+                
+                document.getElementById('checkRange').textContent = `${intToIp(targetNetwork)} - ${intToIp(broadcastInt)}\n可用：${firstUsable} ~ ${lastUsable}`;
+            } catch (e) {
+                document.getElementById('checkResult').textContent = '❌ 输入错误';
+                document.getElementById('checkRange').textContent = '-';
+            }
+        }
+
+        // CIDR 聚合
+        function aggregateCidr() {
+            const cidrListText = document.getElementById('cidrList').value.trim();
+            const cidrList = cidrListText.split('\n').map(line => line.trim()).filter(line => line);
+            
+            try {
+                // 解析所有 CIDR
+                const networks = cidrList.map(cidr => {
+                    const [ipStr, prefixStr] = cidr.split('/');
+                    const ip = ipToInt(ipStr);
+                    const prefix = parseInt(prefixStr);
+                    const mask = cidrToMask(prefix);
+                    const maskInt = ipToInt(mask);
+                    const networkInt = ip & maskInt;
+                    return { ip: networkInt, prefix, maskInt };
+                });
+                
+                // 按网络地址排序
+                networks.sort((a, b) => a.ip - b.ip);
+                
+                // 尝试聚合
+                let aggregated = [...networks];
+                let changed = true;
+                
+                while (changed) {
+                    changed = false;
+                    const newAggregated = [];
+                    let i = 0;
+                    
+                    while (i < aggregated.length) {
+                        if (i + 1 < aggregated.length) {
+                            const a = aggregated[i];
+                            const b = aggregated[i + 1];
+                            
+                            // 检查是否可以聚合（相邻且相同前缀）
+                            if (a.prefix === b.prefix && a.ip + (1 << (32 - a.prefix)) === b.ip) {
+                                // 可以聚合
+                                const newPrefix = a.prefix - 1;
+                                const newMask = cidrToMask(newPrefix);
+                                const newMaskInt = ipToInt(newMask);
+                                newAggregated.push({
+                                    ip: a.ip & newMaskInt,
+                                    prefix: newPrefix,
+                                    maskInt: newMaskInt
+                                });
+                                i += 2;
+                                changed = true;
+                            } else {
+                                newAggregated.push(a);
+                                i++;
+                            }
+                        } else {
+                            newAggregated.push(aggregated[i]);
+                            i++;
+                        }
+                    }
+                    
+                    aggregated = newAggregated;
+                }
+                
+                // 格式化结果
+                const resultStr = aggregated.map(n => `${intToIp(n.ip)}/${n.prefix}`).join('\n');
+                document.getElementById('aggregateResult').textContent = resultStr || '❌ 无法聚合';
+            } catch (e) {
+                document.getElementById('aggregateResult').textContent = '❌ 输入格式错误';
+            }
+        }
+        
+        // 初始化
+        calculateNetwork();
+        filterPorts();  // 初始化端口表并显示计数
+        convertMac();
+        
+        // 检测表格横向溢出并显示提示（移动端）
+        function checkTableOverflow() {
+            if (window.innerWidth <= 768) {
+                document.querySelectorAll('.table-scroll-wrapper').forEach(wrapper => {
+                    if (wrapper.scrollWidth > wrapper.clientWidth) {
+                        wrapper.classList.add('has-overflow');
+                    } else {
+                        wrapper.classList.remove('has-overflow');
+                    }
+                });
+            }
+        }
+        
+        // 页面加载和窗口调整时检测
+        window.addEventListener('load', checkTableOverflow);
+        window.addEventListener('resize', checkTableOverflow);
+        
+        // 端口表筛选后也检测
+        const originalFilterPorts = filterPorts;
+        filterPorts = function() {
+            originalFilterPorts();
+            setTimeout(checkTableOverflow, 100);
+        };
+    </script>
+</body>
+</html>
